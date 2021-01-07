@@ -46,11 +46,27 @@ int outside_ball = 1;
 vec4 curve(float t)
 {
 	vec4 result = {
+		0.9*cos(2*M_PI*t),
+		0.9*sin(2*M_PI*t),
+		0.3*sin(2*M_PI*4.0*t),
+		0.0
+	};
+	/* interesting twist
+	vec4 result = {
 		cos(2.9*M_PI*t),
 		sin(2*2.50*M_PI*t),
 		sin(2*2*M_PI*t),
 		0.0
 	};
+	*/
+	/* funky fresh
+	vec4 result = {
+		cos(2.9*M_PI*t),
+		sin(M_PI*t*0.5),
+		fmod(tan(M_PI*5.0*t), 1.0),
+		0.0
+	};
+	*/
 	/* basic spiral curve
 	vec4 result = {
 		cos(2*M_PI*1*t),
@@ -135,7 +151,7 @@ vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tub
 	
 void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tubeRadius, vec4 vertices[]){
 	// must have an initial direction for the first normal
-	vec4 prev_normal = {1.0, 1.0, 1.0, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
+	vec4 prev_normal = {-0.5, 0.1, 0.3, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
 	////prev_normal = project_onto_plane(prev_normal, tangent(0, pathsegs));
 	//prev_normal = normalize_v4(prev_normal);
 	// make first end cap
