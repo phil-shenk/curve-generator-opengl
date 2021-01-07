@@ -45,12 +45,14 @@ int outside_ball = 1;
  */
 vec4 curve(float t)
 {
+	/*
 	vec4 result = {
 		0.9*cos(2*M_PI*t),
 		0.9*sin(2*M_PI*t),
 		0.3*sin(2*M_PI*4.0*t),
 		0.0
 	};
+	*/
 	/* interesting twist
 	vec4 result = {
 		cos(2.9*M_PI*t),
@@ -67,14 +69,14 @@ vec4 curve(float t)
 		0.0
 	};
 	*/
-	/* basic spiral curve
+	///* basic spiral curve
 	vec4 result = {
-		cos(2*M_PI*1*t),
-		sin(2*M_PI*1*t),
+		cos(2*M_PI*4*t),
+		sin(2*M_PI*4*t),
 		2*t - 1,
 		0
 	};
-	*/
+	//*/
 	return result;
 }
 /*
@@ -145,6 +147,7 @@ vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tub
 	
 void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tubeRadius, vec4 vertices[]){
 	// must have an initial direction for the first normal
+	// this should be able to be arbitrary, as long as the curve doesn't start parallel to this vector
 	vec4 prev_normal = {-0.5, 0.1, 0.3, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
 	// make first end cap
 	for(int j=0; j<tubesegs; j++){
