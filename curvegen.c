@@ -130,7 +130,7 @@ vec4 old_normal(int i, int numSegments){
 	}
 	return norml;
 }
-vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tubeRadius, vec4 prev_normal){
+vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float tubeRadius, vec4 prev_normal){
 	vec4 curvepos = curve_from_index(i, pathsegs);
 	vec4 vnorm = normal(i, pathsegs, prev_normal);
 	vec4 P0 = scale_v4(tubeRadius, vnorm);
@@ -145,15 +145,15 @@ vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tub
 	return tubept;
 }
 	
-void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tubeRadius, vec4 vertices[]){
+void populateSpringVertices(int pathsegs, int tubesegs, float tubeRadius, vec4 vertices[]){
 	// must have an initial direction for the first normal
 	// this should be able to be arbitrary, as long as the curve doesn't start parallel to this vector
 	vec4 prev_normal = {-0.5, 0.1, 0.3, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
 	// make first end cap
 	for(int j=0; j<tubesegs; j++){
 		// 1st end cap
-		vec4 v1 = tubePoint(0,  pathsegs,j,  tubesegs,twists,tubeRadius,prev_normal);
-		vec4 v3 = tubePoint(0,  pathsegs,j+1,tubesegs,twists,tubeRadius,prev_normal);
+		vec4 v1 = tubePoint(0,  pathsegs,j,  tubesegs,tubeRadius,prev_normal);
+		vec4 v3 = tubePoint(0,  pathsegs,j+1,tubesegs,tubeRadius,prev_normal);
 		vec4 v2 = curve_from_index(0, pathsegs);
 		v2.w = 1;
 		// 1st endcap triangle
@@ -164,10 +164,10 @@ void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tube
 	// make tube segment
 	for(int i=0; i<pathsegs; i++){
 		for(int j=0; j<tubesegs; j++){
-			vec4 v1 = tubePoint(i,  pathsegs,j,  tubesegs,twists,tubeRadius, prev_normal);
-			vec4 v2 = tubePoint(i+1,pathsegs,j,  tubesegs,twists,tubeRadius, prev_normal);
-			vec4 v3 = tubePoint(i,  pathsegs,j+1,tubesegs,twists,tubeRadius, prev_normal);
-			vec4 v4 = tubePoint(i+1,pathsegs,j+1,tubesegs,twists,tubeRadius, prev_normal);
+			vec4 v1 = tubePoint(i,  pathsegs,j,  tubesegs,tubeRadius, prev_normal);
+			vec4 v2 = tubePoint(i+1,pathsegs,j,  tubesegs,tubeRadius, prev_normal);
+			vec4 v3 = tubePoint(i,  pathsegs,j+1,tubesegs,tubeRadius, prev_normal);
+			vec4 v4 = tubePoint(i+1,pathsegs,j+1,tubesegs,tubeRadius, prev_normal);
 			// triangle A
 			vertices[(tubesegs*i + j)*6 + 0]   = v3;
 			vertices[(tubesegs*i + j)*6 + 1]   = v2;
@@ -183,8 +183,8 @@ void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tube
 	// make last end cap
 	for(int j=0; j<tubesegs; j++){
 		// last end cap
-		vec4 v4 = tubePoint(pathsegs,  pathsegs,j,  tubesegs,twists,tubeRadius,prev_normal);
-		vec4 v6 = tubePoint(pathsegs,  pathsegs,j+1,tubesegs,twists,tubeRadius,prev_normal);
+		vec4 v4 = tubePoint(pathsegs,  pathsegs,j,  tubesegs,tubeRadius,prev_normal);
+		vec4 v6 = tubePoint(pathsegs,  pathsegs,j+1,tubesegs,tubeRadius,prev_normal);
 		vec4 v5 = curve_from_index(pathsegs, pathsegs);
 		v5.w = 1;
 		// last endcap triangle
@@ -222,7 +222,7 @@ void populateSpringColors(int n, vec4 colors[], int tubesegs){
 }
 
 
-void init(int pathsegs, int tubesegs, float twists, float tubeRadius)
+void init(int pathsegs, int tubesegs, float tubeRadius)
 {
     // add another tubesegs to allow endcaps
     int num_triangle_pairs = tubesegs*pathsegs + tubesegs;
@@ -230,7 +230,7 @@ void init(int pathsegs, int tubesegs, float twists, float tubeRadius)
     num_vertices = num_triangle_pairs*6;
     vec4 vertices[num_vertices];
     vec4 colors[num_vertices];
-    populateSpringVertices(pathsegs, tubesegs, twists, tubeRadius, vertices);
+    populateSpringVertices(pathsegs, tubesegs, tubeRadius, vertices);
     populateSpringColors(num_triangle_pairs, colors, tubesegs);
 
     GLuint program = initShader("vshader.glsl", "fshader.glsl");
@@ -413,15 +413,13 @@ int main(int argc, char **argv)
 {
     int pathsegs=200;
     int tubesegs=10;
-    float twists=3.0;
     float tubeRadius=0.15;
 
-    if(argc==5){
+    if(argc==4){
 	printf("using arguments\n");
         pathsegs = atoi(argv[1]);
         tubesegs = atoi(argv[2]);
-        twists   = atof(argv[3]);
-        tubeRadius = atof(argv[4]);
+        tubeRadius = atof(argv[3]);
     }
 
     glutInit(&argc, argv);
@@ -430,7 +428,7 @@ int main(int argc, char **argv)
     glutInitWindowPosition(100,100);
     glutCreateWindow("spiral season");
     glewInit();
-    init(pathsegs, tubesegs, twists, tubeRadius);
+    init(pathsegs, tubesegs, tubeRadius);
     glutDisplayFunc(display);
     glutIdleFunc(idle);
     glutKeyboardFunc(keyboard);
