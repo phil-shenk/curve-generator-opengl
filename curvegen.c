@@ -46,8 +46,8 @@ int outside_ball = 1;
 vec4 curve(float t)
 {
 	vec4 result = {
-		cos(2*M_PI*t),
-		sin(2*2.01*M_PI*t),
+		cos(2.9*M_PI*t),
+		sin(2*2.50*M_PI*t),
 		sin(2*2*M_PI*t),
 		0.0
 	};
@@ -101,7 +101,15 @@ vec4 curvature(int i, int numSegments){
 /*
  * vector function representing a normal of the curve as a function of parameter 't'
  */
-vec4 normal(int i, int numSegments){
+vec4 normal(int i, int numSegments, vec4 prev_normal){
+	vec4 tang = tangent(i, numSegments);
+	vec4 tang_projection = project_v4(prev_normal, tang);
+	vec4 norml = subtract_v4(prev_normal, tang_projection);
+	norml = normalize_v4(norml);
+	//could also use project_onto_plane() function that I made for this purpose.. and make sure to normalize
+	return norml;
+}
+vec4 old_normal(int i, int numSegments){
 	vec4 curv = curvature(i, numSegments);
 	vec4 tang = tangent(i, numSegments);
 	vec4 norml = cross_v4(tang, curv);
@@ -110,9 +118,9 @@ vec4 normal(int i, int numSegments){
 	}
 	return norml;
 }
-vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tubeRadius){
+vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tubeRadius, vec4 prev_normal){
 	vec4 curvepos = curve_from_index(i, pathsegs);
-	vec4 vnorm = normal(i, pathsegs);
+	vec4 vnorm = normal(i, pathsegs, prev_normal);
 	vec4 P0 = scale_v4(tubeRadius, vnorm);
 	P0.w = 1; // just to make a point HA
 
@@ -124,15 +132,31 @@ vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tub
 	tubept = add_v4(tubept, curvepos);
 	return tubept;
 }
-		
+	
 void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tubeRadius, vec4 vertices[]){
+	// must have an initial direction for the first normal
+	vec4 prev_normal = {1.0, 1.0, 1.0, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
+	////prev_normal = project_onto_plane(prev_normal, tangent(0, pathsegs));
+	//prev_normal = normalize_v4(prev_normal);
+	// make first end cap
+	for(int j=0; j<tubesegs; j++){
+		// 1st end cap
+		vec4 v1 = tubePoint(0,  pathsegs,j,  tubesegs,twists,tubeRadius,prev_normal);
+		vec4 v3 = tubePoint(0,  pathsegs,j+1,tubesegs,twists,tubeRadius,prev_normal);
+		vec4 v2 = curve_from_index(0, pathsegs);
+		v2.w = 1;
+		// 1st endcap triangle
+		vertices[(tubesegs*pathsegs + j)*6 + 0]   = v1;
+		vertices[(tubesegs*pathsegs + j)*6 + 1]   = v2;
+		vertices[(tubesegs*pathsegs + j)*6 + 2]   = v3;
+	}
 	// make tube segment
 	for(int i=0; i<pathsegs; i++){
 		for(int j=0; j<tubesegs; j++){
-			vec4 v1 = tubePoint(i,  pathsegs,j,  tubesegs,twists,tubeRadius);
-			vec4 v2 = tubePoint(i+1,pathsegs,j,  tubesegs,twists,tubeRadius);
-			vec4 v3 = tubePoint(i,  pathsegs,j+1,tubesegs,twists,tubeRadius);
-			vec4 v4 = tubePoint(i+1,pathsegs,j+1,tubesegs,twists,tubeRadius);
+			vec4 v1 = tubePoint(i,  pathsegs,j,  tubesegs,twists,tubeRadius, prev_normal);
+			vec4 v2 = tubePoint(i+1,pathsegs,j,  tubesegs,twists,tubeRadius, prev_normal);
+			vec4 v3 = tubePoint(i,  pathsegs,j+1,tubesegs,twists,tubeRadius, prev_normal);
+			vec4 v4 = tubePoint(i+1,pathsegs,j+1,tubesegs,twists,tubeRadius, prev_normal);
 			// triangle A
 			vertices[(tubesegs*i + j)*6 + 0]   = v3;
 			vertices[(tubesegs*i + j)*6 + 1]   = v2;
@@ -142,23 +166,16 @@ void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tube
 			vertices[(tubesegs*i + j)*6 + 4]   = v4;
 			vertices[(tubesegs*i + j)*6 + 5]   = v2;
 		}
+		// update prev_normal with the new current normal
+		prev_normal = normal(i, pathsegs, prev_normal);
 	}
-	// make 1st cap
+	// make last end cap
 	for(int j=0; j<tubesegs; j++){
-		// 1st end cap
-		vec4 v1 = tubePoint(0,  pathsegs,j,  tubesegs,twists,tubeRadius);
-		vec4 v3 = tubePoint(0,  pathsegs,j+1,tubesegs,twists,tubeRadius);
-		vec4 v2 = curve_from_index(0, pathsegs);
-		v2.w = 1;
 		// last end cap
-		vec4 v4 = tubePoint(pathsegs,  pathsegs,j,  tubesegs,twists,tubeRadius);
-		vec4 v6 = tubePoint(pathsegs,  pathsegs,j+1,tubesegs,twists,tubeRadius);
+		vec4 v4 = tubePoint(pathsegs,  pathsegs,j,  tubesegs,twists,tubeRadius,prev_normal);
+		vec4 v6 = tubePoint(pathsegs,  pathsegs,j+1,tubesegs,twists,tubeRadius,prev_normal);
 		vec4 v5 = curve_from_index(pathsegs, pathsegs);
 		v5.w = 1;
-		// 1st endcap triangle
-		vertices[(tubesegs*pathsegs + j)*6 + 0]   = v1;
-		vertices[(tubesegs*pathsegs + j)*6 + 1]   = v2;
-		vertices[(tubesegs*pathsegs + j)*6 + 2]   = v3;
 		// last endcap triangle
 		vertices[(tubesegs*pathsegs + j)*6 + 3]   = v4;
 		vertices[(tubesegs*pathsegs + j)*6 + 4]   = v6;
@@ -178,7 +195,7 @@ void populateSpringColors(int n, vec4 colors[], int tubesegs){
 		vec4 c1 = {r1, g1, b1, 1};
 		vec4 c2 = {r2, g2, b2, 1};
 		if(i%tubesegs==0){
-			c1.x = 1.0;
+			c1.x = 0.8;
 			c1.y = 0.0;
 			c1.z = 0.0;
 			c2 = c1;
