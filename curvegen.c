@@ -104,13 +104,6 @@ vec4 curvature(int i, int numSegments){
 	vec4 thisTangent = tangent(i,   numSegments);
 	vec4 nextTangent = tangent(i+1, numSegments);
 	vec4 curv = normalize_v4(subtract_v4(nextTangent, thisTangent));
-
-	// ignoring straight curves for now (where curvature would be zero)
-	// #TODO: check for the case where curvature is zero and 
-	// plan: in this case, get 2 valid curvature values on either side, and interpolate between them
-	// should be relatively straightforward
-	// oooooooooooooo or wait there should be a more elegant solution
-	// take a look at the SIGN of the cross product....
 	return curv;
 }
 
@@ -125,6 +118,7 @@ vec4 normal(int i, int numSegments, vec4 prev_normal){
 	//could also use project_onto_plane() function that I made for this purpose.. and make sure to normalize
 	return norml;
 }
+// DEPRECATED: no longer need to use curvature()
 vec4 old_normal(int i, int numSegments){
 	vec4 curv = curvature(i, numSegments);
 	vec4 tang = tangent(i, numSegments);
@@ -152,8 +146,6 @@ vec4 tubePoint(int i, int pathsegs, int j, int tubesegs, float twists, float tub
 void populateSpringVertices(int pathsegs, int tubesegs, float twists, float tubeRadius, vec4 vertices[]){
 	// must have an initial direction for the first normal
 	vec4 prev_normal = {-0.5, 0.1, 0.3, 0.0};// #TODO: check to make sure that the curve doesn't start out in this direction..
-	////prev_normal = project_onto_plane(prev_normal, tangent(0, pathsegs));
-	//prev_normal = normalize_v4(prev_normal);
 	// make first end cap
 	for(int j=0; j<tubesegs; j++){
 		// 1st end cap
