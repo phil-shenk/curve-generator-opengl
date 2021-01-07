@@ -1,7 +1,7 @@
 # curve-generator-opengl
 an exercise in generating a 3D mesh representation of an arbitrary parametrized 3D curve, and rendering it in OpenGL
 
-Instructions:
+## Instructions:
 ```make curvegen```  
 requires gcc, make, and GLEW, GLUT, opengl, libxmu, libxi, as well as my linear algebra library, linalglib (github.com/phil-shenk/linalglib)  
 linalglib can be cloned to the same parent directory as curve-generator-opengl, or you can modify the makefile to point to your linalglib directory.  
